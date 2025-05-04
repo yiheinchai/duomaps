@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duo Map UI - Single File</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- General Styles --- */
+        :root {
+            --duo-green: #58cc02;
+            --duo-green-dark: #4aa502;
+            --duo-blue: #1cb0f6;
+            --duo-blue-dark: #1899d6;
+            --duo-yellow: #ffc800;
+            --duo-orange: #ff9600;
+            --duo-red: #ff4b4b;
+            --duo-purple: #894cdc;
+            --duo-gray-light: #e5e5e5;
+            --duo-gray-medium: #afafaf;
+            --duo-gray-dark: #777777;
+            --duo-text-dark: #4b4b4b;
+            --duo-text-light: #ffffff;
+            --duo-bg-light: #ffffff;
+            --duo-bg-offwhite: #f7f7f7;
+
+            --font-family: 'Nunito', sans-serif;
+            --border-radius-small: 8px;
+            --border-radius-medium: 16px;
+            --border-radius-large: 24px;
+            --box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+             height: 100%; /* Ensure body takes full height */
+             overflow: hidden; /* Prevent scrollbars on body */
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: #eef4f7; /* A neutral background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- SVG Icon Styles --- */
+        .icon {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            stroke-width: 0;
+            stroke: currentColor;
+            fill: currentColor;
+            vertical-align: middle;
+        }
+        .icon.icon-small { font-size: 16px; }
+        .icon.icon-medium { font-size: 24px; }
+        .icon.icon-large { font-size: 30px; }
+
+        /* --- Container --- */
+        .duo-map-container {
+            display: flex;
+            width: 1280px; /* Approx width from image */
+            height: 720px; /* Approx height from image */
+            background-color: var(--duo-bg-light);
+            border-radius: var(--border-radius-large);
+            box-shadow: var(--box-shadow);
+            overflow: hidden; /* Clip content to rounded corners */
+        }
+
+        /* --- Left Sidebar --- */
+        .sidebar-left {
+            background-color: var(--duo-bg-light);
+            width: 90px;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 1px solid var(--duo-gray-light);
+            gap: 15px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .sidebar-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--duo-gray-medium);
+            width: 70px; /* Fixed width for alignment */
+            position: relative; /* For badge */
+            text-align: center;
+        }
+
+        .sidebar-icon .icon-placeholder,
+        .sidebar-icon .icon {
+            font-size: 24px; /* Control SVG size */
+            margin-bottom: 5px;
+            transition: color 0.2s ease;
+            height: 40px; /* Fixed height for alignment */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Placeholder for City Icons */
+        .icon-placeholder {
+            width: 40px;
+            height: 40px !important; /* Override general icon height */
+            border-radius: var(--border-radius-small);
+            background-color: var(--duo-gray-light); /* Default placeholder */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--duo-gray-dark);
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .icon-placeholder.city-paris { background-color: #87CEEB; } /* Sky Blue */
+        .icon-placeholder.city-tokyo { background-color: #FFB6C1; } /* Light Pink */
+        .icon-placeholder.city-london { background-color: #90EE90; } /* Light Green */
+        .icon-placeholder.city-beijing { background-color: #FFA07A; } /* Light Salmon */
+
+
+        .sidebar-icon span {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .sidebar-icon.active,
+        .sidebar-icon:hover {
+            color: var(--duo-blue);
+        }
+         .sidebar-icon.active span {
+             color: var(--duo-blue);
+        }
+         .sidebar-icon.active .icon-placeholder {
+             border: 2px solid var(--duo-blue);
+         }
+
+
+        .sidebar-divider {
+            width: 60%;
+            height: 1px;
+            background-color: var(--duo-gray-light);
+            margin: 10px 0;
+        }
+
+        .sidebar-icon.more-tours .icon {
+            color: var(--duo-blue);
+        }
+        .sidebar-icon.more-tours span {
+             color: var(--duo-blue);
+             font-weight: 700;
+        }
+
+        .sidebar-icon.character {
+            margin-top: auto; /* Pushes to the bottom */
+        }
+        .sidebar-icon .character-avatar {
+             width: 50px;
+             height: 50px;
+             border: 3px solid var(--duo-yellow);
+             border-radius: 50%;
+             background-color: #D2B48C; /* Tan placeholder */
+             display: flex; /* For centering content if needed */
+             align-items: center;
+             justify-content: center;
+             font-weight: bold;
+             color: white;
+        }
+        .sidebar-icon .char-badge {
+            position: absolute;
+            bottom: 0px;
+            right: 5px;
+            background-color: var(--duo-orange);
+            color: var(--duo-text-light);
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 2px solid var(--duo-text-light);
+            line-height: 1;
+        }
+
+        /* --- Main Map Area --- */
+        .map-area {
+            flex-grow: 1;
+            position: relative; /* Needed for absolute positioning inside */
+            display: flex;
+            flex-direction: column; /* Stack top-bar and map-content */
+            overflow: hidden; /* Hide map overflow */
+        }
+
+        /* --- Top Bar --- */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 25px;
+            background-color: rgba(255, 255, 255, 0.8); /* Slight transparency */
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid var(--duo-gray-light);
+            position: relative; /* Ensure it's above map content if needed */
+            z-index: 10;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: var(--duo-bg-offwhite);
+            padding: 8px 15px;
+            border-radius: var(--border-radius-medium);
+            border: 1px solid var(--duo-gray-light);
+        }
+
+        .search-bar input {
+            border: none;
+            background: none;
+            outline: none;
+            margin: 0 10px;
+            font-size: 14px;
+            color: var(--duo-text-dark);
+            width: 180px; /* Adjust as needed */
+        }
+        .search-bar input::placeholder {
+            color: var(--duo-gray-medium);
+        }
+
+        .search-bar .icon {
+            color: var(--duo-gray-medium);
+            font-size: 18px; /* Adjust icon size */
+        }
+        .search-bar .icon-directions {
+            color: var(--duo-blue);
+            cursor: pointer;
+        }
+
+        .tour-progress {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .flag {
+            font-size: 30px; /* Adjust size */
+        }
+
+        .progress-text h2 {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--duo-text-dark);
+            margin-bottom: 5px;
+        }
+        .progress-bar-container {
+            width: 150px; /* Adjust width */
+            height: 10px;
+            background-color: var(--duo-gray-light);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        .progress-bar {
+            width: 75%; /* (20-15)/20 = 25% done => 75% left? OR 15/20 done? Let's assume 15/20 visited => 75% done */
+            /* The text says "15/20 spots left", which is confusing. Assuming it means 5 spots visited out of 20 total */
+            width: calc(5 / 20 * 100%); /* 25% */
+            height: 100%;
+            background-color: var(--duo-yellow);
+            border-radius: 5px;
+        }
+        .progress-text span {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--duo-gray-dark);
+            display: flex;
+            align-items: center;
+        }
+        .progress-text span .icon {
+            color: var(--duo-yellow);
+            margin-right: 5px;
+            font-size: 14px;
+        }
+
+        /* --- Map Content --- */
+        .map-content {
+            flex-grow: 1;
+            background-image: url('https://i.stack.imgur.com/Y1zR1.png'); /* USE THE PROVIDED IMAGE */
+            background-size: cover;
+            background-position: center;
+            position: relative; /* For positioning elements on the map */
+            overflow: hidden; /* Hide parts of markers outside */
+        }
+
+        /* --- Landmarks & Markers (Simplified CSS Placeholders) --- */
+        .landmark, .marker {
+            position: absolute;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer; /* Indicate they could be clickable */
+        }
+        .landmark-icon-placeholder, .marker-icon-placeholder {
+            width: 30px;
+            height: 30px;
+            background-color: var(--duo-orange); /* Default landmark color */
+            border: 2px solid white;
+            border-radius: 4px; /* Square-ish */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+         .landmark-icon-placeholder svg, .marker-icon-placeholder svg {
+             width: 60%;
+             height: 60%;
+             fill: white;
+         }
+
+
+        .landmark span, .marker span {
+            display: block;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            white-space: nowrap;
+            margin-top: 5px; /* Space below icon */
+            font-weight: bold;
+        }
+
+        /* Specific Landmark Styles (Simplified) */
+        .landmark.arc-de-triomphe .landmark-icon-placeholder { background-color: #DEB887; } /* BurlyWood */
+        .landmark.place-concorde .landmark-icon-placeholder { background-color: #B0E0E6; } /* PowderBlue */
+        .landmark.palais-garnier .landmark-icon-placeholder { background-color: #FFD700; } /* Gold */
+        .landmark.hotel-invalides .landmark-icon-placeholder { background-color: #DAA520; } /* GoldenRod */
+        .landmark.pantheon .landmark-icon-placeholder { background-color: #A0522D; } /* Sienna */
+        .landmark.sainte-chapelle .landmark-icon-placeholder { background-color: #8A2BE2; } /* BlueViolet */
+        .landmark.notre-dame .landmark-icon-placeholder { background-color: #708090; } /* SlateGray */
+        .landmark.louvre .landmark-icon-placeholder {
+            background-color: #ADD8E6; /* LightBlue */
+            /* Basic triangle shape */
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 25px solid var(--duo-blue); /* Use a distinct color */
+            border-radius: 0;
+        }
+        .landmark.louvre span { margin-top: 8px; } /* Adjust label pos for triangle */
+
+
+        /* Approximate Positions (adjust these based on the background image) */
+        .landmark.arc-de-triomphe { top: 25%; left: 20%; transform: translateX(-50%);}
+        .landmark.place-concorde { top: 15%; left: 55%; transform: translateX(-50%);}
+        .landmark.palais-garnier { top: 22%; left: 70%; transform: translateX(-50%);}
+        .landmark.hotel-invalides { top: 40%; left: 50%; transform: translateX(-50%);}
+        .landmark.pantheon { top: 50%; left: 65%; transform: translateX(-50%);}
+        .landmark.sainte-chapelle { top: 65%; left: 20%; transform: translateX(-50%);}
+        .landmark.notre-dame { top: 80%; left: 30%; transform: translateX(-50%);}
+        .landmark.louvre { top: 80%; left: 75%; transform: translateX(-50%);}
+
+        /* You Are Here Marker */
+        .marker.you-are-here {
+            top: 50%; /* Adjust precisely */
+            left: 40%; /* Adjust precisely */
+            transform: translate(-50%, -50%); /* Center marker icon */
+            z-index: 5;
+        }
+        .marker.you-are-here .marker-icon-placeholder {
+             background-color: transparent; /* No bg for the SVG container itself */
+             border: none;
+             box-shadow: none;
+             width: 50px; /* Adjust size */
+             height: auto;
+        }
+        .marker.you-are-here .marker-icon-placeholder svg { /* The Eiffel Tower SVG */
+             width: 100%;
+             height: 100%;
+             fill: #A9A9A9; /* Dark Gray */
+             filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+        }
+
+        .marker.you-are-here span {
+            margin-top: 0; /* Adjust spacing */
+            background-color: var(--duo-blue); /* Match style */
+        }
+        .marker-popup {
+            position: absolute;
+            bottom: 100%; /* Position above the icon's baseline */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--duo-bg-light);
+            color: var(--duo-text-dark);
+            padding: 5px 10px;
+            border-radius: var(--border-radius-small);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            margin-bottom: 12px; /* Increased Space between popup and icon */
+        }
+        .marker-popup::before { /* Location pin icon */
+             content: '';
+             position: absolute;
+             top: -18px; /* Position pin above text */
+             left: 50%;
+             transform: translateX(-50%);
+             width: 16px;
+             height: 16px;
+             background-color: var(--duo-red);
+             border-radius: 50% 50% 50% 0; /* Teardrop top */
+             transform: translateX(-50%) rotate(-45deg);
+             border: 1px solid white;
+        }
+         .marker-popup::after { /* White dot inside pin */
+             content: '';
+             position: absolute;
+              top: -14px;
+              left: 50%;
+              transform: translateX(-50%);
+              width: 6px;
+              height: 6px;
+              background-color: white;
+              border-radius: 50%;
+              z-index: 1;
+         }
+
+        /* --- Location Pop-up --- */
+        .location-popup-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%); /* Center horizontally */
+            width: 400px; /* Adjust width */
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .popup-streak {
+            background-color: var(--duo-orange);
+            color: var(--duo-text-light);
+            padding: 8px 20px;
+            border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .location-popup {
+            background-color: var(--duo-bg-light);
+            border-radius: var(--border-radius-medium);
+            /* Overlap the top orange part */
+            margin-top: -15px;
+            padding-top: 15px; /* Add space back */
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .popup-content {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px 10px 20px; /* Less padding bottom */
+            gap: 15px;
+            position: relative;
+        }
+
+        .popup-icon-placeholder {
+             width: 80px; /* Adjust size */
+             height: 80px; /* Adjust size */
+             align-self: flex-start; /* Align to top */
+             flex-shrink: 0;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+        }
+        .popup-icon-placeholder svg {
+            width: 100%;
+            height: auto;
+            fill: #A9A9A9; /* Dark Gray */
+        }
+
+        .popup-text { flex-grow: 1;}
+
+        .popup-text p {
+            font-size: 14px;
+            color: var(--duo-gray-dark);
+            margin-bottom: 2px;
+        }
+        .popup-text h2 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--duo-text-dark);
+            margin-bottom: 4px;
+        }
+        .popup-text .location-native {
+            font-size: 14px;
+            color: var(--duo-gray-medium);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .popup-text .xp-gain {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--duo-yellow);
+        }
+        .popup-text .xp-gain .icon { /* Style the lightning bolt */
+            display: inline-block;
+            transform: translateY(2px); /* Align better with text */
+            font-size: 18px;
+        }
+
+        .sound-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--duo-blue);
+            color: var(--duo-text-light);
+            border: none;
+            border-radius: var(--border-radius-small);
+            width: 35px;
+            height: 35px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        .sound-btn:hover {
+            background-color: var(--duo-blue-dark);
+        }
+        .sound-btn .icon { font-size: 18px; }
+
+        .next-spot-btn {
+            background-color: var(--duo-green);
+            color: var(--duo-text-light);
+            font-size: 16px;
+            font-weight: 800;
+            text-align: center;
+            padding: 15px 0;
+            border: none;
+            border-bottom-left-radius: var(--border-radius-medium);
+            border-bottom-right-radius: var(--border-radius-medium);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-top: 2px solid rgba(0,0,0,0.1); /* Subtle top border */
+            margin-top: 10px; /* Space above button */
+        }
+        .next-spot-btn:hover {
+            background-color: var(--duo-green-dark);
+        }
+
+
+        /* --- Map Controls --- */
+        .map-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 15;
+        }
+
+        .map-controls button {
+            background-color: var(--duo-bg-light);
+            border: 1px solid var(--duo-gray-light);
+            color: var(--duo-blue); /* Icon color */
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-small);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        .map-controls button:hover {
+            background-color: var(--duo-bg-offwhite);
+        }
+        .map-controls button .icon-minus {
+            color: var(--duo-gray-dark); /* Minus button different color */
+        }
+         .map-controls button .icon {
+            font-size: 20px; /* Control icon size */
+         }
+
+
+        /* --- Right Sidebar --- */
+        .sidebar-right {
+            width: 280px; /* Adjust width */
+            background-color: rgba(255, 255, 255, 0.85); /* Slightly transparent */
+            backdrop-filter: blur(5px);
+            border-left: 1px solid var(--duo-gray-light);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto; /* Allow scrolling if content overflows */
+             flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .panel {
+            background-color: var(--duo-bg-light);
+            border-radius: var(--border-radius-medium);
+            padding: 15px;
+            border: 1px solid var(--duo-gray-light);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .panel h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--duo-text-dark);
+            margin-bottom: 10px;
+        }
+        .panel p {
+            font-size: 13px;
+            color: var(--duo-gray-dark);
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        /* Tourist Clash Specific */
+        .clash-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .clash-display .player {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--duo-gray-medium); /* Default */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .avatar-placeholder.you { background-color: #4682B4; } /* Steel Blue */
+        .avatar-placeholder.amy { background-color: #DA70D6; } /* Orchid */
+        .avatar-placeholder.gary { background-color: #FF8C00; } /* Dark Orange */
+        .avatar-placeholder.maria { background-color: #DB7093; } /* Pale Violet Red */
+        .avatar-placeholder.angie { background-color: #CD853F; } /* Peru */
+        .avatar-placeholder.michael { background-color: #20B2AA; } /* Light Sea Green */
+
+
+        .clash-display .player span {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--duo-text-dark);
+        }
+        .clash-display .timer {
+            background-color: var(--duo-purple);
+            color: var(--duo-text-light);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 12px;
+        }
+        .tourist-clash .status {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--duo-green);
+            text-align: center;
+            margin-bottom: 0; /* Reset margin */
+        }
+
+        /* Tourist Leaderboard Specific */
+        .tourist-leaderboard ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .tourist-leaderboard li {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: var(--border-radius-small);
+            transition: background-color 0.2s ease;
+        }
+        .tourist-leaderboard li.current-user {
+            background-color: #e7f8d8; /* Light green highlight */
+            border: 1px solid var(--duo-green);
+        }
+        .tourist-leaderboard li .rank {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--duo-gray-dark);
+            width: 20px; /* Align ranks */
+            text-align: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .tourist-leaderboard li .avatar-placeholder {
+             width: 35px;
+             height: 35px;
+             margin-right: 10px;
+             font-size: 14px; /* Smaller font for smaller avatar */
+        }
+
+        .leader-info {
+            flex-grow: 1;
+            margin-right: 10px;
+            overflow: hidden; /* Prevent long text push */
+        }
+        .leader-info span {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--duo-text-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .leader-info small {
+            font-size: 12px;
+            color: var(--duo-gray-medium);
+            display: block; /* Ensure it wraps if needed */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .score {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--duo-text-dark);
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .score .icon {
+            color: var(--duo-yellow);
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        .view-all {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: var(--duo-blue);
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        .view-all:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Inline SVG Definitions (can be hidden or placed elsewhere) -->
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <!-- Simple Bookmark Icon -->
+        <svg id="icon-bookmark" viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"></path></svg>
+        <!-- Simple Redo/Refresh Icon -->
+        <svg id="icon-redo" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"></path></svg>
+        <!-- Simple Map Location Icon -->
+        <svg id="icon-map-location" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path></svg>
+         <!-- Simple Search Icon -->
+        <svg id="icon-search" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
+        <!-- Simple Directions Icon -->
+        <svg id="icon-directions" viewBox="0 0 24 24"><path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.39.39-1.02 0-1.41zM14 14.5V12h-4v3H8v-4c0-.55.45-1 1-1h5V7.5l3.5 3.5-3.5 3.5z"></path></svg>
+         <!-- Simple Map Pin Icon -->
+        <svg id="icon-map-pin" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path></svg>
+        <!-- Simple Lightning Bolt Icon -->
+        <svg id="icon-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <!-- Simple Volume Up Icon -->
+        <svg id="icon-volume-up" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        <!-- Simple Crosshairs Icon -->
+        <svg id="icon-crosshairs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+        <!-- Simple Plus Icon -->
+        <svg id="icon-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <!-- Simple Minus Icon -->
+        <svg id="icon-minus" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <!-- Simplified Eiffel Tower -->
+        <svg id="icon-eiffel" viewBox="0 0 100 200" preserveAspectRatio="xMidYMid meet">
+            <polygon points="50,0 70,200 30,200" fill="currentColor"/> <!-- Main tower shape -->
+            <rect x="35" y="60" width="30" height="10" fill="rgba(255,255,255,0.5)"/> <!-- Mid-level platform (simplified) -->
+            <rect x="40" y="120" width="20" height="8" fill="rgba(255,255,255,0.5)"/> <!-- Lower platform (simplified) -->
+            <path d="M30 200 Q 20 180, 40 180 L 60 180 Q 80 180, 70 200 Z" fill="currentColor"/> <!-- Arched base -->
+        </svg>
+         <!-- Generic Building Placeholder -->
+         <svg id="icon-building" viewBox="0 0 24 24"><path d="M4 21h16v-2H4v2zm2-4h12V11H6v6zm1-4h10v2H7v-2zm-3-4h16V7H4v4zm0-6h16V3H4v2z"></path></svg>
+
+      </defs>
+    </svg>
+
+
+    <div class="duo-map-container">
+
+        <!-- Left Sidebar -->
+        <aside class="sidebar-left">
+            <div class="sidebar-icon">
+                <svg class="icon icon-medium"><use xlink:href="#icon-bookmark"/></svg>
+            </div>
+            <div class="sidebar-icon">
+                 <svg class="icon icon-medium"><use xlink:href="#icon-redo"/></svg>
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-icon city active">
+                <div class="icon-placeholder city-paris"></div>
+                <span>Paris</span>
+            </div>
+            <div class="sidebar-icon city">
+                 <div class="icon-placeholder city-tokyo"></div>
+                <span>Tokyo</span>
+            </div>
+            <div class="sidebar-icon city">
+                 <div class="icon-placeholder city-london"></div>
+                <span>London</span>
+            </div>
+            <div class="sidebar-icon city">
+                 <div class="icon-placeholder city-beijing"></div>
+                <span>Beijing</span>
+            </div>
+            <div class="sidebar-icon more-tours">
+                 <svg class="icon icon-medium"><use xlink:href="#icon-map-location"/></svg>
+                <span>More tours</span>
+            </div>
+            <div class="sidebar-icon character">
+                 <div class="character-avatar"></div>
+                 <span class="char-badge">24</span>
+            </div>
+        </aside>
+
+        <!-- Main Map Area -->
+        <main class="map-area">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="search-bar">
+                     <svg class="icon"><use xlink:href="#icon-search"/></svg>
+                    <input type="text" placeholder="Search Duo Map">
+                     <svg class="icon icon-directions"><use xlink:href="#icon-directions"/></svg>
+                </div>
+                <div class="tour-progress">
+                    <div class="flag">🇫🇷</div>
+                    <div class="progress-text">
+                        <h2>Tourism in Paris</h2>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar"></div>
+                        </div>
+                        <span>
+                            <svg class="icon icon-map-pin"><use xlink:href="#icon-map-pin"/></svg>
+                            15/20 spots left
+                        </span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Map Content -->
+            <div class="map-content">
+                 <!-- Landmarks (Simplified Placeholders) -->
+                 <div class="landmark arc-de-triomphe">
+                     <div class="landmark-icon-placeholder">
+                         <svg class="icon"><use xlink:href="#icon-building"/></svg> <!-- Generic Building -->
+                     </div>
+                     <span>Arc De Triomphe</span>
+                 </div>
+                 <div class="landmark place-concorde">
+                     <div class="landmark-icon-placeholder">
+                          <!-- Simple Obelisk -->
+                         <svg viewBox="0 0 10 30"><polygon points="5,0 10,30 0,30" fill="white"/></svg>
+                     </div>
+                     <span>Place de la Concorde</span>
+                 </div>
+                 <div class="landmark palais-garnier">
+                     <div class="landmark-icon-placeholder">
+                          <svg class="icon"><use xlink:href="#icon-building"/></svg>
+                     </div>
+                     <span>Palais Garnier</span>
+                 </div>
+                  <div class="landmark hotel-invalides">
+                     <div class="landmark-icon-placeholder">
+                         <svg class="icon"><use xlink:href="#icon-building"/></svg>
+                     </div>
+                     <span>Hôtel des Invalides</span>
+                 </div>
+                 <div class="landmark pantheon">
+                     <div class="landmark-icon-placeholder">
+                         <svg class="icon"><use xlink:href="#icon-building"/></svg>
+                     </div>
+                     <span>Panthéon</span>
+                 </div>
+                 <div class="landmark sainte-chapelle">
+                     <div class="landmark-icon-placeholder">
+                          <svg class="icon"><use xlink:href="#icon-building"/></svg>
+                     </div>
+                     <span>Sainte-Chapelle</span>
+                 </div>
+                 <div class="landmark notre-dame">
+                     <div class="landmark-icon-placeholder">
+                         <svg class="icon"><use xlink:href="#icon-building"/></svg>
+                     </div>
+                     <span>Cathédrale Notre-Dame</span>
+                 </div>
+                 <div class="landmark louvre">
+                      <div class="landmark-icon-placeholder">
+                         <!-- Triangle already handled by CSS -->
+                     </div>
+                     <span>Musée du Louvre</span>
+                 </div>
+
+
+                 <!-- "You are here" marker -->
+                 <div class="marker you-are-here">
+                     <div class="marker-popup">You are here</div>
+                     <div class="marker-icon-placeholder">
+                         <svg><use xlink:href="#icon-eiffel"/></svg>
+                     </div>
+                     <span>Tour Eiffel</span>
+                 </div>
+
+
+                 <!-- Pop-up Card -->
+                <div class="location-popup-container">
+                     <div class="popup-streak">
+                        💧 3 places in a day streak!
+                     </div>
+                     <div class="location-popup">
+                         <div class="popup-content">
+                             <div class="popup-icon-placeholder">
+                                 <svg><use xlink:href="#icon-eiffel"/></svg>
+                             </div>
+                             <div class="popup-text">
+                                 <p>You visited the</p>
+                                 <h2>Eiffel Tower</h2>
+                                 <p class="location-native">🇫🇷 Tour Eiffel</p>
+                                 <p class="xp-gain">
+                                     <svg class="icon"><use xlink:href="#icon-zap"/></svg>
+                                     +30 XP
+                                 </p>
+                             </div>
+                             <button class="sound-btn">
+                                  <svg class="icon"><use xlink:href="#icon-volume-up"/></svg>
+                             </button>
+                         </div>
+                         <button class="next-spot-btn">TO NEXT SPOT</button>
+                    </div>
+                 </div>
+            </div>
+
+             <!-- Map Controls -->
+            <div class="map-controls">
+                <button> <svg class="icon"><use xlink:href="#icon-crosshairs"/></svg> </button>
+                <button> <svg class="icon icon-plus"><use xlink:href="#icon-plus"/></svg> </button>
+                <button> <svg class="icon icon-minus"><use xlink:href="#icon-minus"/></svg> </button>
+            </div>
+
+        </main> <!-- End Map Area -->
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar-right">
+            <div class="panel tourist-clash">
+                <h3>Tourist Clash</h3>
+                <p>Visit all the spots before Amy</p>
+                <div class="clash-display">
+                    <div class="player you">
+                        <div class="avatar-placeholder you"></div>
+                        <span>15</span>
+                    </div>
+                    <div class="timer">12h</div>
+                    <div class="player opponent">
+                        <span>10</span>
+                         <div class="avatar-placeholder amy"></div>
+                    </div>
+                </div>
+                <p class="status">You are taking the lead!</p>
+            </div>
+
+            <div class="panel tourist-leaderboard">
+                <h3>Tourist Leaderboard</h3>
+                <ul>
+                    <li>
+                        <span class="rank">1</span>
+                        <div class="avatar-placeholder gary"></div>
+                        <div class="leader-info">
+                            <span>Gary</span>
+                            <small>in Musée du Louvre</small>
+                        </div>
+                        <span class="score">
+                             <svg class="icon"><use xlink:href="#icon-map-pin"/></svg> 19
+                         </span>
+                    </li>
+                    <li>
+                        <span class="rank">2</span>
+                        <div class="avatar-placeholder maria"></div>
+                        <div class="leader-info">
+                            <span>마리아 카노</span>
+                            <small>500m to Arc de Trio...</small>
+                        </div>
+                         <span class="score">
+                             <svg class="icon"><use xlink:href="#icon-map-pin"/></svg> 18
+                         </span>
+                    </li>
+                     <li>
+                        <span class="rank">3</span>
+                        <div class="avatar-placeholder angie"></div>
+                        <div class="leader-info">
+                            <span>Angie</span>
+                            <small>in Pantheon</small>
+                        </div>
+                         <span class="score">
+                             <svg class="icon"><use xlink:href="#icon-map-pin"/></svg> 17
+                         </span>
+                    </li>
+                     <li>
+                        <span class="rank">4</span>
+                         <div class="avatar-placeholder michael"></div>
+                        <div class="leader-info">
+                            <span>Michael</span>
+                            <small>234m to Sainte-Cha...</small>
+                        </div>
+                         <span class="score">
+                             <svg class="icon"><use xlink:href="#icon-map-pin"/></svg> 16
+                         </span>
+                    </li>
+                    <li class="current-user">
+                        <span class="rank">5</span>
+                         <div class="avatar-placeholder you"></div>
+                        <div class="leader-info">
+                            <span>You</span>
+                            <small>in Eiffel Tower</small>
+                        </div>
+                         <span class="score">
+                             <svg class="icon"><use xlink:href="#icon-map-pin"/></svg> 15
+                         </span>
+                    </li>
+                </ul>
+                <a href="#" class="view-all">View all tourists</a>
+            </div>
+        </aside>
+
+    </div> <!-- End Duo Map Container -->
+
+    <!-- No external JS needed for this static version -->
+</body>
+</html>
